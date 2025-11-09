@@ -11,7 +11,7 @@ const reactionComponents = {
 
 const reactionNames = {
   combustion: "Combustion",
-  acidBase: "Acid-Base", 
+  acidBase: "Acid-Base",
   photosynthesis: "Photosynthesis"
 };
 
@@ -22,7 +22,6 @@ export default function App() {
   const [isSimulating, setIsSimulating] = useState(false);
   const [progress, setProgress] = useState(0);
   const [isLoading, setIsLoading] = useState(true);
-
 
   React.useEffect(() => {
     const timer = setTimeout(() => {
@@ -54,50 +53,85 @@ export default function App() {
 
   return (
     <div className="app-container">
+      {/* Header Section */}
       <header className="header">
-        <h1>Chemical Reactions Lab</h1>
-        <p>Interactive 3D Chemistry Simulator</p>
+        <h1>Axiom</h1>
+        <p>Advanced 3D Chemistry Simulator</p>
       </header>
-      
-      <div className="controls">
-        <div className="selector">
-          <label htmlFor="reaction-select">Select a Reaction:</label>
-          <select
-            id="reaction-select"
-            value={selectedReaction}
-            onChange={(e) => setSelectedReaction(e.target.value)}
-            className="select-dropdown"
-          >
-            {Object.keys(reactionComponents).map(key => (
-              <option key={key} value={key}>{reactionNames[key]}</option>
-            ))}
-          </select>
-        </div>
-        
 
-      </div>
-      
-      <div className="controls-help">
-        Drag to rotate • Scroll to zoom • Click simulate to start
-      </div>
-      
-      <SelectedComponent isSimulating={isSimulating} />
-      
-      <div className="simulation-section">
-        <button 
-          onClick={handleSimulate} 
-          disabled={isSimulating}
-          className="simulate-btn"
-        >
-          {isSimulating ? "Simulating..." : "Start Reaction"}
-        </button>
-        
-        {isSimulating && (
-          <div className="progress-container">
-            <div className="progress-bar" style={{ width: `${progress}%` }}></div>
-            <p>Reaction Progress: {progress}%</p>
+      {/* Main Application Grid */}
+      <div className="main-grid">
+        {/* Control Panel */}
+        <aside className="control-panel">
+          <div className="panel-header">
+            <h3>Reaction Controls</h3>
           </div>
-        )}
+
+          <div className="control-group">
+            <label className="control-label">Select Reaction Type</label>
+            <select
+              value={selectedReaction}
+              onChange={(e) => setSelectedReaction(e.target.value)}
+              className="reaction-selector"
+            >
+              {Object.keys(reactionComponents).map(key => (
+                <option key={key} value={key}>{reactionNames[key]}</option>
+              ))}
+            </select>
+          </div>
+
+          <div className="control-group">
+            <button
+              onClick={handleSimulate}
+              disabled={isSimulating}
+              className="simulate-button"
+            >
+              {isSimulating ? "Running..." : "Start Simulation"}
+            </button>
+          </div>
+
+          {isSimulating && (
+            <div className="progress-section">
+              <div className="progress-label">
+                <span>Progress</span>
+                <span>{progress}%</span>
+              </div>
+              <div className="progress-track">
+                <div
+                  className="progress-fill"
+                  style={{ width: `${progress}%` }}
+                ></div>
+              </div>
+            </div>
+          )}
+
+          <div className="instructions-panel">
+            <h4>Controls</h4>
+            <ul>
+              <li><strong>Rotate:</strong> Left click + drag</li>
+              <li><strong>Zoom:</strong> Mouse wheel</li>
+              <li><strong>Pan:</strong> Right click + drag</li>
+            </ul>
+          </div>
+        </aside>
+
+        {/* 3D Visualization Area */}
+        <main className="visualization-area">
+          <div className="reaction-info">
+            <h2>{reactionNames[selectedReaction]} Reaction</h2>
+            <div className="reaction-status">
+              {isSimulating ? (
+                <span className="status-active">Simulation Active</span>
+              ) : (
+                <span className="status-idle">Ready to Simulate</span>
+              )}
+            </div>
+          </div>
+
+          <div className="canvas-container">
+            <SelectedComponent isSimulating={isSimulating} />
+          </div>
+        </main>
       </div>
     </div>
   );
