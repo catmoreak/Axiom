@@ -808,9 +808,6 @@ body {
 
 
 
-
-
-
 .simple-info {
   background: rgba(0, 0, 0, 0.2);
   padding: 20px;
@@ -858,11 +855,6 @@ body {
     height: 350px !important;
   }
   
-@keyframes bubble {
-  0% { transform: translateY(50px) scale(0.5); opacity: 0; }
-  50% { opacity: 1; }
-  100% { transform: translateY(-20px) scale(1.2); opacity: 0; }
-}
 
     
   .simulate-btn.crazy {
@@ -897,35 +889,6 @@ body {
     padding: 15px;
   }
 }
-
-
-
-.emoji {
-  font-size: 3em;
-  animation: float 3s ease-in-out infinite;
-  align-self : center;
-  width: fit-content;
-}
-
-
-.background-effect{
-  position: absolute;
-  top : 0;
-  left: 0;
-  width: 0;
-  height: 0;
-  z-index: -1;
-  overflow: hidden;
-  pointer-events: none;
-  background-linear-gradient(to bottom, #000000, #0a0a0a);
-
-  animation: backgroundMove 10s linear infinite;
-
-}
-
-
-
-
 
 .bubbles {
   background: linear-gradient(to bottom, #e0f7fa, #b2ebf2);
