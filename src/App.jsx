@@ -22,6 +22,7 @@ export default function App() {
   const [isSimulating, setIsSimulating] = useState(false);
   const [progress, setProgress] = useState(0);
   const [isLoading, setIsLoading] = useState(true);
+  const [isDarkMode, setIsDarkMode] = useState(true);
 
   React.useEffect(() => {
     const timer = setTimeout(() => {
@@ -45,6 +46,10 @@ export default function App() {
     }, 200);
   };
 
+  const toggleDarkMode = () => {
+    setIsDarkMode(!isDarkMode);
+  };
+
   const SelectedComponent = reactionComponents[selectedReaction];
 
   if (isLoading) {
@@ -52,16 +57,25 @@ export default function App() {
   }
 
   return (
-    <div className="app-container">
-      {/* Header Section */}
+    <div className={`app-container ${isDarkMode ? 'dark-mode' : 'light-mode'}`}>
+      
       <header className="header">
         <h1>Axiom</h1>
         <p>Advanced 3D Chemistry Simulator</p>
+        <div className="theme-toggle-container">
+          <button
+            onClick={toggleDarkMode}
+            className="theme-toggle-button"
+            aria-label={isDarkMode ? 'Switch to light mode' : 'Switch to dark mode'}
+          >
+            {isDarkMode ? '🌑' : '🌞'}
+          </button>
+        </div>
       </header>
 
-      {/* Main Application Grid */}
+      
       <div className="main-grid">
-        {/* Control Panel */}
+        
         <aside className="control-panel">
           <div className="panel-header">
             <h3>Reaction Controls</h3>
@@ -115,7 +129,7 @@ export default function App() {
           </div>
         </aside>
 
-        {/* 3D Visualization Area */}
+        
         <main className="visualization-area">
           <div className="reaction-info">
             <h2>{reactionNames[selectedReaction]} Reaction</h2>
