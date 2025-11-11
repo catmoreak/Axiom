@@ -1,13 +1,13 @@
 import React from 'react';
 import Molecule3D from './Molecule3D';
 
-const Combustion3D = ({ isSimulating }) => {
+const Combustion3D = ({ isSimulating, onAtomClick }) => {
   return (
     <div className="reaction-card-3d">
       <h2><strong>Combustion Reaction</strong></h2>
       
       <div className="molecule-container">
-        <Molecule3D reaction="combustion" isReacting={isSimulating} />
+        <Molecule3D reaction="combustion" isReacting={isSimulating} onAtomClick={onAtomClick} />
       </div>
       
       <div className="reaction-equation">
