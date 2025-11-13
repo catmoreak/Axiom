@@ -155,6 +155,18 @@ export default function App() {
 
   return (
     <div className={`app-container ${isDarkMode ? 'dark-mode' : 'light-mode'}`}>
+      {/* Universe Background Elements */}
+      <div className="meteors">
+        <div className="meteor"></div>
+        <div className="meteor"></div>
+        <div className="meteor"></div>
+        <div className="meteor"></div>
+        <div className="meteor"></div>
+        <div className="meteor"></div>
+        <div className="meteor"></div>
+        <div className="meteor"></div>
+        <div className="meteor"></div>
+      </div>
       
       <header className="header">
         <h1>Axiom</h1>
