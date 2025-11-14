@@ -116,14 +116,11 @@ export default function App() {
   const handleSimulate = () => {
     setIsSimulating(true);
     setProgress(0);
-    setSimulationPhase("Preparing reactants...");
+    setSimulationPhase("Initializing simulation...");
     const interval = setInterval(() => {
       setProgress(prev => {
         const newProgress = prev + 2;
-        if (newProgress >= 25 && newProgress < 50) setSimulationPhase("Mixing reactants...");
-        else if (newProgress >= 50 && newProgress < 75) setSimulationPhase("Reaction in progress...");
-        else if (newProgress >= 75 && newProgress < 100) setSimulationPhase("Forming products...");
-        else if (newProgress >= 100) {
+        if (newProgress >= 100) {
           setSimulationPhase("Reaction complete!");
           clearInterval(interval);
           setTimeout(() => {
