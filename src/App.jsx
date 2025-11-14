@@ -2,7 +2,6 @@ import React, { useState } from "react";
 import AcidBase3D from "./components/AcidBase3D";
 import Combustion3D from "./components/Combustion3D";
 import Photosynthesis3D from "./components/Photosynthesis3D";
-import QuizModal from "./components/QuizModal";
 
 const reactionComponents = {
   combustion: Combustion3D,
@@ -14,21 +13,6 @@ const reactionNames = {
   combustion: "Combustion",
   acidBase: "Acid-Base",
   photosynthesis: "Photosynthesis"
-};
-
-const quizQuestions = {
-  combustion: [
-    { question: "What is the main product of combustion?", options: ["Water", "Carbon Dioxide", "Oxygen", "Hydrogen"], correct: 1, hint: "Combustion of hydrocarbons produces CO2 and H2O." },
-    { question: "Why does combustion require oxygen?", options: ["To cool the reaction", "To provide fuel", "To oxidize the fuel", "To create heat"], correct: 2, hint: "Oxygen acts as the oxidizing agent in the reaction." }
-  ],
-  acidBase: [
-    { question: "What is produced in an acid-base reaction?", options: ["Gas", "Salt and Water", "Acid", "Base"], correct: 1, hint: "Neutralization reactions produce salt and water." },
-    { question: "What does HCl represent?", options: ["Base", "Salt", "Acid", "Water"], correct: 2, hint: "HCl is hydrochloric acid, a strong acid." }
-  ],
-  photosynthesis: [
-    { question: "What gas is produced in photosynthesis?", options: ["Carbon Dioxide", "Oxygen", "Nitrogen", "Hydrogen"], correct: 1, hint: "Plants release oxygen as a byproduct." },
-    { question: "What does the plant use as energy?", options: ["Water", "Sunlight", "Soil", "Air"], correct: 1, hint: "Light energy is converted to chemical energy." }
-  ]
 };
 
 const reactantOptions = {
@@ -84,8 +68,6 @@ export default function App() {
   const [progress, setProgress] = useState(0);
   const [isLoading, setIsLoading] = useState(true);
   const [isDarkMode, setIsDarkMode] = useState(true);
-  const [showQuiz, setShowQuiz] = useState(false);
-  const [showQuizPrompt, setShowQuizPrompt] = useState(false);
   const [totalScore, setTotalScore] = useState(0);
   const [selectedAcid, setSelectedAcid] = useState("HCl");
   const [selectedBase, setSelectedBase] = useState("NaOH");
@@ -126,7 +108,6 @@ export default function App() {
           setTimeout(() => {
             setIsSimulating(false);
             setSimulationPhase("");
-            setShowQuizPrompt(true);
           }, 500);
         }
         return newProgress > 100 ? 100 : newProgress;
@@ -136,12 +117,6 @@ export default function App() {
 
   const toggleDarkMode = () => {
     setIsDarkMode(!isDarkMode);
-  };
-
-  const handleQuizComplete = (score) => {
-    console.log('Quiz completed with score:', score);
-    setTotalScore(totalScore + score);
-    
   };
 
   const SelectedComponent = reactionComponents[selectedReaction];
@@ -281,7 +256,6 @@ export default function App() {
               <li><strong>Zoom:</strong> Mouse wheel</li>
               <li><strong>Pan:</strong> Right click + drag</li>
             </ul>
-            <p>After simulation, test your knowledge with a quiz!</p>
           </div>
         </aside>
 
@@ -308,24 +282,6 @@ export default function App() {
           </div>
         </main>
       </div>
-      <QuizModal
-        isOpen={showQuiz}
-        onClose={() => setShowQuiz(false)}
-        questions={quizQuestions[selectedReaction]}
-        onComplete={handleQuizComplete}
-      />
-      {showQuizPrompt && (
-        <div className="quiz-prompt-overlay">
-          <div className="quiz-prompt">
-            <h3>Simulation Complete!</h3>
-            <p>Want to test your knowledge with a quick quiz?</p>
-            <div className="prompt-buttons">
-              <button onClick={() => { setShowQuiz(true); setShowQuizPrompt(false); }}>Yes, take quiz</button>
-              <button onClick={() => setShowQuizPrompt(false)}>No, thanks</button>
-            </div>
-          </div>
-        </div>
-      )}
       {atomInfo && (
         <div className="atom-info-overlay">
           <div className="atom-info-modal">
