@@ -2,6 +2,8 @@ import React, { useState } from "react";
 import AcidBase3D from "./components/AcidBase3D";
 import Combustion3D from "./components/Combustion3D";
 import Photosynthesis3D from "./components/Photosynthesis3D";
+import QuizModal from "./components/QuizModal";
+import { GoogleGenerativeAI } from "@google/generative-ai";
 
 const reactionComponents = {
   combustion: Combustion3D,
@@ -73,6 +75,9 @@ export default function App() {
   const [selectedBase, setSelectedBase] = useState("NaOH");
   const [simulationPhase, setSimulationPhase] = useState("");
   const [atomInfo, setAtomInfo] = useState(null);
+  const [isQuizOpen, setIsQuizOpen] = useState(false);
+  const [quizQuestions, setQuizQuestions] = useState([]);
+  const [isQuizLoading, setIsQuizLoading] = useState(false);
 
   const handleAtomClick = (symbol) => {
     if (atomInfoData[symbol]) {
@@ -81,12 +86,47 @@ export default function App() {
   };
 
   const badges = [
-    { name: "Beginner Chemist", threshold: 1, icon: "🧪" },
-    { name: "Reaction Master", threshold: 3, icon: "⚗️" },
-    { name: "Chemistry Expert", threshold: 5, icon: "🏆" }
+    { name: "Beginner Chemist", threshold: 1, icon: "" },
+    { name: "Reaction Master", threshold: 3, icon: "" },
+    { name: "Chemistry Expert", threshold: 5, icon: "" }
   ];
 
   const currentBadge = badges.find(badge => totalScore >= badge.threshold) || null;
+
+  const generateQuizQuestions = async () => {
+    setIsQuizLoading(true);
+    const genAI = new GoogleGenerativeAI(process.env.REACT_APP_GEMINI_API_KEY);
+    const model = genAI.getGenerativeModel({ model: "gemini-2.5-flash" });
+
+    const prompt = `Generate 5 multiple-choice questions about combustion reactions in chemistry. The questions should be suitable for students, not too difficult, and relevant only to combustion. Each question should have:
+- question: the question text
+- options: an array of 4 possible answers
+- correct: the index (0-3) of the correct answer
+- hint: a short hint to help understand
+
+Output only valid JSON array of objects with these fields. No additional text.`;
+
+    try {
+      const result = await model.generateContent(prompt);
+      const response = await result.response;
+      let text = response.text();
+     
+      text = text.replace(/```json\n?/, '').replace(/\n?```/, '');
+      const questions = JSON.parse(text);
+      setQuizQuestions(questions);
+      setIsQuizOpen(true);
+    } catch (error) {
+      console.error("Error generating questions:", error);
+      alert("Failed to generate quiz questions. Please check your API key and try again.");
+    } finally {
+      setIsQuizLoading(false);
+    }
+  };
+
+  const handleQuizComplete = (score) => {
+    setTotalScore(prev => prev + score);
+    setIsQuizOpen(false);
+  };
 
   React.useEffect(() => {
     const timer = setTimeout(() => {
@@ -233,6 +273,19 @@ export default function App() {
             </button>
           </div>
 
+          {selectedReaction === "combustion" && (
+            <div className="control-group">
+              <button
+                onClick={generateQuizQuestions}
+                className="quiz-button"
+                title="After you click on this button, please wait for a few seconds while quiz questions are loading."
+                disabled={isQuizLoading}
+              >
+                {isQuizLoading ? "Loading Quiz Questions..." : "Take Quiz"}
+              </button>
+            </div>
+          )}
+
           {isSimulating && (
             <div className="progress-section">
               <div className="progress-label">
@@ -281,6 +334,12 @@ export default function App() {
           </div>
         </div>
       )}
+      <QuizModal
+        isOpen={isQuizOpen}
+        onClose={() => setIsQuizOpen(false)}
+        questions={quizQuestions}
+        onComplete={handleQuizComplete}
+      />
     </div>
   );
 }
