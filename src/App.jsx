@@ -142,9 +142,9 @@ export default function App() {
       
       <header className="header">
         <h1>Axiom</h1>
-        <p>Advanced 3D Chemistry Simulator</p>
+        <p>Chemistry Simulator</p>
         <div className="header-info">
-          <div className="score-display">Score: {totalScore}</div>
+          
           {currentBadge && (
             <div className="badge-display">
               {currentBadge.icon} {currentBadge.name}
@@ -249,27 +249,14 @@ export default function App() {
             </div>
           )}
 
-          <div className="instructions-panel">
-            <h4>Controls</h4>
-            <ul>
-              <li><strong>Rotate:</strong> Left click + drag</li>
-              <li><strong>Zoom:</strong> Mouse wheel</li>
-              <li><strong>Pan:</strong> Right click + drag</li>
-            </ul>
-          </div>
+   
         </aside>
 
         
         <main className="visualization-area">
           <div className="reaction-info">
             <h2>{reactionNames[selectedReaction]} Reaction</h2>
-            <div className="reaction-status">
-              {isSimulating ? (
-                <span className="status-active">Simulation Active</span>
-              ) : (
-                <span className="status-idle">Ready to Simulate</span>
-              )}
-            </div>
+            
           </div>
 
           <div className="canvas-container">
