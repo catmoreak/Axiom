@@ -1,44 +1,41 @@
-import React, { useRef, useEffect, useState } from 'react';
-import { Canvas, useFrame } from '@react-three/fiber';
-import { OrbitControls, Text, Sphere, Cylinder, Html } from '@react-three/drei';
+import React, { useRef, useEffect, useState, useMemo, memo, Suspense } from 'react';
+import { Canvas, useFrame, extend } from '@react-three/fiber';
+import { OrbitControls, Text, Sphere, Cylinder, Html, Effects } from '@react-three/drei';
+import { EffectComposer, Bloom, ChromaticAberration } from '@react-three/postprocessing';
 import * as THREE from 'three';
 
-const Atom = ({ position, color, size, speed, children, isReacting, charge, onClick }) => {
+
+extend({ EffectComposer, Bloom, ChromaticAberration });
+
+const Atom = memo(({ position, color, size, speed, children, isReacting, charge, onClick }) => {
   const meshRef = useRef();
   const [hovered, setHovered] = useState(false);
   
   useFrame((state) => {
     if (meshRef.current) {
-      
-      meshRef.current.rotation.x += speed * 0.02;
-      meshRef.current.rotation.y += speed * 0.01;
+      meshRef.current.rotation.x += speed * 0.01;
+      meshRef.current.rotation.y += speed * 0.005;
       
       if (isReacting) {
-        
-        meshRef.current.scale.setScalar(
-          1 + Math.sin(state.clock.elapsedTime * 10) * 0.3
-        );
-        meshRef.current.position.y = position[1] + Math.sin(state.clock.elapsedTime * 5) * 0.5;
-      
-        meshRef.current.material.emissiveIntensity = 0.8 + Math.sin(state.clock.elapsedTime * 15) * 0.5;
+        meshRef.current.scale.setScalar(1 + Math.sin(state.clock.elapsedTime * 8) * 0.2);
+        meshRef.current.position.y = position[1] + Math.sin(state.clock.elapsedTime * 4) * 0.3;
+        meshRef.current.material.emissiveIntensity = 0.6 + Math.sin(state.clock.elapsedTime * 12) * 0.4;
       } else {
-        
-        meshRef.current.position.y = position[1] + Math.sin(state.clock.elapsedTime * 2) * 0.1;
-        meshRef.current.scale.setScalar(hovered ? 1.2 : 1);
-        meshRef.current.material.emissiveIntensity = hovered ? 0.3 : 0;
+        meshRef.current.position.y = position[1] + Math.sin(state.clock.elapsedTime * 1.5) * 0.05;
+        meshRef.current.scale.setScalar(hovered ? 1.15 : 1);
+        meshRef.current.material.emissiveIntensity = hovered ? 0.2 : 0;
       }
     }
   });
 
   return (
     <group>
-      
       <mesh position={position} visible={hovered || !!charge || isReacting}>
-        <sphereGeometry args={[size * (hovered ? 1.25 : 1.15), 32, 32]} />
+        <sphereGeometry args={[size * (hovered ? 1.2 : 1.1), 16, 16]} />
         <meshBasicMaterial
           color={charge ? (charge > 0 ? '#ff6b6b' : '#4ecdc4') : color}
           transparent
-          opacity={0.12}
+          opacity={0.1}
           depthWrite={false}
         />
       </mesh>
@@ -46,7 +43,7 @@ const Atom = ({ position, color, size, speed, children, isReacting, charge, onCl
       <Sphere
         ref={meshRef}
         position={position}
-        args={[size, 64, 64]}
+        args={[size, 32, 32]}
         onPointerEnter={() => setHovered(true)}
         onPointerLeave={() => setHovered(false)}
         onClick={onClick}
@@ -56,22 +53,21 @@ const Atom = ({ position, color, size, speed, children, isReacting, charge, onCl
         <meshPhysicalMaterial
           color={color}
           emissive={isReacting ? color : hovered ? color : '#000000'}
-          emissiveIntensity={isReacting ? 0.9 : hovered ? 0.3 : 0}
-          roughness={0.15}
-          metalness={0.6}
-          clearcoat={0.8}
-          clearcoatRoughness={0.1}
-          transmission={0.02}
-          thickness={0.5}
+          emissiveIntensity={isReacting ? 0.7 : hovered ? 0.2 : 0}
+          roughness={0.2}
+          metalness={0.5}
+          clearcoat={0.6}
+          clearcoatRoughness={0.2}
+          transmission={0.05}
+          thickness={0.3}
         />
       </Sphere>
 
-      
       {children && (
         <Html
-          position={[position[0], position[1] + size + 0.2, position[2]]}
+          position={[position[0], position[1] + size + 0.15, position[2]]}
           center
-          distanceFactor={6}
+          distanceFactor={8}
           occlude={[]}
         >
           <div className={`atom-label ${hovered ? 'atom-label-hover' : ''}`}>
@@ -82,65 +78,61 @@ const Atom = ({ position, color, size, speed, children, isReacting, charge, onCl
       )}
     </group>
   );
-};
+});
 
 
-const Bond = ({ start, end, isReacting }) => {
+const Bond = memo(({ start, end, isReacting }) => {
   const dx = end[0] - start[0];
   const dy = end[1] - start[1];
   const dz = end[2] - start[2];
   const length = Math.sqrt(dx * dx + dy * dy + dz * dz);
   const midpoint = [(start[0] + end[0]) / 2, (start[1] + end[1]) / 2, (start[2] + end[2]) / 2];
 
-  
-  const angleX = Math.atan2(dy, dz);
-  const angleY = Math.atan2(dx, dz);
-  const angleZ = Math.atan2(dy, dx);
+  const direction = useMemo(() => new THREE.Vector3(dx, dy, dz).normalize(), [dx, dy, dz]);
+  const quaternion = useMemo(() => new THREE.Quaternion().setFromUnitVectors(new THREE.Vector3(0, 1, 0), direction), [direction]);
 
   return (
-    <group position={midpoint} rotation={[angleX, angleY, angleZ]}>
+    <group position={midpoint} quaternion={quaternion}>
       <Cylinder
-        args={[0.05, 0.05, length, 8]} 
+        args={[0.03, 0.03, length, 6]}
         castShadow
         receiveShadow
       >
         <meshPhysicalMaterial
-          color={isReacting ? '#ff4500' : '#ffffff'}
+          color={isReacting ? '#ff4500' : '#cccccc'}
           emissive={isReacting ? '#ff4500' : '#000000'}
-          emissiveIntensity={isReacting ? 0.5 : 0}
-          roughness={0.2}
-          metalness={0.8}
+          emissiveIntensity={isReacting ? 0.3 : 0}
+          roughness={0.3}
+          metalness={0.7}
         />
       </Cylinder>
     </group>
   );
-};
+});
 
 
-const ParticleSystem = ({ count = 50, isActive, reactionType }) => {
+const ParticleSystem = memo(({ count = 30, isActive, reactionType }) => {
   const particlesRef = useRef();
   const [particles] = useState(() => {
     const temp = [];
     for (let i = 0; i < count; i++) {
-      let color = '#ffff00'; 
-      if (reactionType === 'combustion') color = Math.random() > 0.5 ? '#ff4500' : '#ffa500'; 
-      else if (reactionType === 'acidBase') color = Math.random() > 0.5 ? '#74b9ff' : '#ffffff'; 
-      else if (reactionType === 'photosynthesis') color = Math.random() > 0.5 ? '#ffd93d' : '#00b894'; 
-      
-      temp.push({
+      let color = '#22c55e'; 
+      if (reactionType === 'combustion') color = Math.random() > 0.5 ? '#16a34a' : '#15803d'; 
+      else if (reactionType === 'acidBase') color = Math.random() > 0.5 ? '#166534' : '#14532d'; 
+      else if (reactionType === 'photosynthesis') color = Math.random() > 0.5 ? '#22c55e' : '#16a34a';      temp.push({
         position: [
-          (Math.random() - 0.5) * 10,
-          (Math.random() - 0.5) * 10,
-          (Math.random() - 0.5) * 10
+          (Math.random() - 0.5) * 8,
+          (Math.random() - 0.5) * 8,
+          (Math.random() - 0.5) * 8
         ],
         velocity: [
-          (Math.random() - 0.5) * 0.1,
-          reactionType === 'combustion' ? Math.random() * 0.2 : (Math.random() - 0.5) * 0.1, 
-          (Math.random() - 0.5) * 0.1
+          (Math.random() - 0.5) * 0.08,
+          reactionType === 'combustion' ? Math.random() * 0.15 : (Math.random() - 0.5) * 0.08,
+          (Math.random() - 0.5) * 0.08
         ],
         life: Math.random(),
         color: color,
-        size: reactionType === 'acidBase' ? 0.08 : 0.05 
+        size: reactionType === 'acidBase' ? 0.06 : 0.04
       });
     }
     return temp;
@@ -152,8 +144,8 @@ const ParticleSystem = ({ count = 50, isActive, reactionType }) => {
         particle.position[0] += particle.velocity[0];
         particle.position[1] += particle.velocity[1];
         particle.position[2] += particle.velocity[2];
-        particle.life -= 0.01;
-        
+        particle.life -= 0.008;
+
         if (particle.life <= 0) {
           particle.position = [0, 0, 0];
           particle.life = 1;
@@ -167,7 +159,7 @@ const ParticleSystem = ({ count = 50, isActive, reactionType }) => {
   return (
     <group ref={particlesRef}>
       {particles.map((particle, i) => (
-        <Sphere key={i} position={particle.position} args={[particle.size, 8, 8]}>
+        <Sphere key={i} position={particle.position} args={[particle.size, 6, 6]}>
           <meshBasicMaterial
             color={particle.color}
             transparent
@@ -177,12 +169,11 @@ const ParticleSystem = ({ count = 50, isActive, reactionType }) => {
       ))}
     </group>
   );
-};
+});
 
 
-const Molecule3D = ({ reaction, isReacting, selectedAcid, selectedBase, productType, onAtomClick }) => {
-  const getMoleculeData = (reactionType) => {
-    switch (reactionType) {
+const getMoleculeData = (reactionType, selectedAcid, selectedBase, productType) => {
+  switch (reactionType) {
       case 'photosynthesis':
         return {
           atoms: [
@@ -286,96 +277,111 @@ const Molecule3D = ({ reaction, isReacting, selectedAcid, selectedBase, productT
     }
   };
 
-  const moleculeData = getMoleculeData(reaction);
+const Molecule3D = ({ reaction, selectedAcid, selectedBase, productType, isReacting, onAtomClick }) => {
+  const moleculeData = useMemo(() => getMoleculeData(reaction, selectedAcid, selectedBase, productType), [reaction, selectedAcid, selectedBase, productType]);
 
   return (
     <Canvas
-      style={{ 
-        height: '500px', 
-        background: 'radial-gradient(circle at 30% 30%, rgba(139, 69, 219, 0.3) 0%, rgba(59, 130, 246, 0.2) 50%, rgba(16, 185, 129, 0.1) 100%), linear-gradient(135deg, #0a0a0a 0%, #1a1a1a 100%)',
+      style={{
+        height: '500px',
+        background: 'radial-gradient(circle at 30% 30%, rgba(22, 163, 74, 0.3) 0%, rgba(21, 128, 61, 0.2) 50%, rgba(20, 83, 45, 0.1) 100%), linear-gradient(135deg, #0a2e0a 0%, #1a4d1a 100%)',
         borderRadius: '16px'
       }}
       camera={{ position: [0, 0, 10], fov: 45 }}
-      gl={{ antialias: true, shadowMap: { enabled: true, type: THREE.PCFSoftShadowMap } }}
+      gl={{
+        antialias: true,
+        shadowMap: { enabled: true, type: THREE.PCFSoftShadowMap },
+        powerPreference: "high-performance",
+        alpha: false
+      }}
+      dpr={[1, 2]}
+      frameloop="demand"
     >
-      <ambientLight intensity={0.3} />
-      <pointLight position={[10, 10, 10]} intensity={1.5} color="#8b45db" castShadow />
-      <pointLight position={[-10, -10, -10]} intensity={1.0} color="#3b82f6" castShadow />
-      <pointLight position={[0, 10, -10]} intensity={0.8} color="#10b981" castShadow />
-      <directionalLight position={[0, -10, 0]} intensity={0.5} color="#ffffff" castShadow />
-      <spotLight
-        position={[0, 20, 0]}
-        angle={0.3}
-        penumbra={1}
-        intensity={1.0}
-        color="#ffffff"
-        castShadow
-      />
-      
-      
-      <mesh position={[0, -5, 0]} rotation={[-Math.PI / 2, 0, 0]} receiveShadow>
-        <planeGeometry args={[20, 20]} />
-        <meshPhysicalMaterial color="#1a1a1a" transparent opacity={0.3} />
-      </mesh>
-      
-      {moleculeData.atoms.map((atom, i) => (
-        <Atom
-          key={i}
-          position={atom.pos}
-          color={atom.color}
-          size={atom.size}
-          speed={atom.speed}
-          isReacting={isReacting}
-          onClick={() => onAtomClick && onAtomClick(atom.label)}
-        >
-          {atom.label}
-        </Atom>
-      ))}
-
-    
-      {moleculeData.bonds.map((bond, i) => (
-        <Bond
-          key={i}
-          start={bond.start}
-          end={bond.end}
-          isReacting={isReacting}
+      <Suspense fallback={null}>
+        <ambientLight intensity={0.4} />
+        <pointLight position={[10, 10, 10]} intensity={1.2} color="#22c55e" castShadow shadow-mapSize-width={1024} shadow-mapSize-height={1024} />
+        <pointLight position={[-10, -10, -10]} intensity={0.8} color="#16a34a" castShadow shadow-mapSize-width={1024} shadow-mapSize-height={1024} />
+        <pointLight position={[0, 10, -10]} intensity={0.6} color="#15803d" castShadow shadow-mapSize-width={1024} shadow-mapSize-height={1024} />
+        <directionalLight position={[0, -10, 0]} intensity={0.4} color="#166534" castShadow shadow-mapSize-width={1024} shadow-mapSize-height={1024} />
+        <spotLight
+          position={[0, 20, 0]}
+          angle={0.3}
+          penumbra={1}
+          intensity={0.8}
+          color="#22c55e"
+          castShadow
+          shadow-mapSize-width={1024}
+          shadow-mapSize-height={1024}
         />
-      ))}
 
-      
-      {isReacting && moleculeData.productBonds && moleculeData.productBonds.map((bond, i) => (
-        <Bond
-          key={`product-bond-${i}`}
-          start={bond.start}
-          end={bond.end}
-          isReacting={true}
+        <mesh position={[0, -5, 0]} rotation={[-Math.PI / 2, 0, 0]} receiveShadow>
+          <planeGeometry args={[20, 20]} />
+          <meshPhysicalMaterial color="#1a1a1a" transparent opacity={0.3} />
+        </mesh>
+
+        {moleculeData.atoms.map((atom, i) => (
+          <Atom
+            key={i}
+            position={atom.pos}
+            color={atom.color}
+            size={atom.size}
+            speed={atom.speed}
+            isReacting={isReacting}
+            onClick={() => onAtomClick && onAtomClick(atom.label)}
+          >
+            {atom.label}
+          </Atom>
+        ))}
+
+        {moleculeData.bonds.map((bond, i) => (
+          <Bond
+            key={i}
+            start={bond.start}
+            end={bond.end}
+            isReacting={isReacting}
+          />
+        ))}
+        {isReacting && moleculeData.products && moleculeData.products.map((atom, i) => (
+          <Atom
+            key={`product-${i}`}
+            position={atom.position}
+            element={atom.element}
+            color={atom.color}
+            isReacting={isReacting}
+          />
+        ))}
+        {isReacting && moleculeData.productBonds && moleculeData.productBonds.map((bond, i) => (
+          <Bond
+            key={`product-bond-${i}`}
+            start={bond.start}
+            end={bond.end}
+            color={bond.color}
+            isReacting={isReacting}
+          />
+        ))}
+
+        <ParticleSystem isActive={isReacting} reactionType={reaction} />
+
+        {isReacting && (
+          <pointLight
+            position={[0, 0, 5]}
+            intensity={1.5 + Math.sin(Date.now() * 0.01) * 0.8}
+            color={reaction === 'combustion' ? '#22c55e' : reaction === 'acidBase' ? '#16a34a' : '#15803d'}
+          />
+        )}
+
+        <OrbitControls
+          enablePan={true}
+          enableZoom={true}
+          enableRotate={true}
+          autoRotate={isReacting}
+          autoRotateSpeed={isReacting ? 3 : 0}
+          enableDamping={true}
+          dampingFactor={0.08}
+          minDistance={5}
+          maxDistance={20}
         />
-      ))}
-
-      
-      <ParticleSystem isActive={isReacting} reactionType={reaction} />
-      
-
-      {isReacting && (
-        <pointLight
-          position={[0, 0, 5]}
-          intensity={2 + Math.sin(Date.now() * 0.01) * 1}
-          color={reaction === 'combustion' ? '#ff4500' : reaction === 'acidBase' ? '#74b9ff' : '#ffd93d'}
-        />
-      )}
-      
-      
-      <OrbitControls 
-        enablePan={true} 
-        enableZoom={true} 
-        enableRotate={true}
-        autoRotate={isReacting}
-        autoRotateSpeed={isReacting ? 4 : 0}
-        enableDamping={true}
-        dampingFactor={0.05}
-        minDistance={5}
-        maxDistance={20}
-      />
+      </Suspense>
     </Canvas>
   );
 };
