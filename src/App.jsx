@@ -17,6 +17,7 @@ const reactionNames = {
   photosynthesis: "Photosynthesis"
 };
 
+
 const reactantOptions = {
   acids: [
     { name: "HCl", formula: "HCl", color: "#e17055", type: "strong" },
@@ -98,7 +99,7 @@ export default function App() {
     const genAI = new GoogleGenerativeAI(process.env.REACT_APP_GEMINI_API_KEY);
     const model = genAI.getGenerativeModel({ model: "gemini-2.5-flash" });
 
-    const prompt = `Generate 5 multiple-choice questions about combustion reactions in chemistry. The questions should be suitable for students, not too difficult, and relevant only to combustion. Each question should have:
+    const prompt = `Generate 5 multiple-choice questions about ${reactionNames[selectedReaction]} reactions in chemistry. The questions should be suitable for students, not too difficult, and relevant only to ${reactionNames[selectedReaction]}. Each question should have:
 - question: the question text
 - options: an array of 4 possible answers
 - correct: the index (0-3) of the correct answer
@@ -273,18 +274,16 @@ Output only valid JSON array of objects with these fields. No additional text.`;
             </button>
           </div>
 
-          {selectedReaction === "combustion" && (
-            <div className="control-group">
-              <button
-                onClick={generateQuizQuestions}
-                className="quiz-button"
-                title="After you click on this button, please wait for a few seconds while quiz questions are loading."
-                disabled={isQuizLoading}
-              >
-                {isQuizLoading ? "Loading Quiz Questions..." : "Take Quiz"}
-              </button>
-            </div>
-          )}
+          <div className="control-group">
+            <button
+              onClick={generateQuizQuestions}
+              className="quiz-button"
+              title="After you click on this button, please wait for a few seconds while quiz questions are loading."
+              disabled={isQuizLoading}
+            >
+              {isQuizLoading ? "Loading Quiz Questions..." : "Take Quiz"}
+            </button>
+          </div>
 
           {isSimulating && (
             <div className="progress-section">
