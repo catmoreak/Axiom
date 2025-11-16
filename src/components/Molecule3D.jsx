@@ -278,26 +278,84 @@ const getMoleculeData = (reactionType, selectedAcid, selectedBase, productType) 
   };
 
 const Molecule3D = ({ reaction, selectedAcid, selectedBase, productType, isReacting, onAtomClick }) => {
+  const [hasError, setHasError] = useState(false);
+
   const moleculeData = useMemo(() => getMoleculeData(reaction, selectedAcid, selectedBase, productType), [reaction, selectedAcid, selectedBase, productType]);
 
-  return (
-    <Canvas
-      style={{
+
+  useEffect(() => {
+    try {
+      const canvas = document.createElement('canvas');
+      const gl = canvas.getContext('webgl') || canvas.getContext('experimental-webgl');
+      if (!gl) {
+        setHasError(true);
+      }
+    } catch (e) {
+      setHasError(true);
+    }
+  }, []);
+
+  if (hasError) {
+    return (
+      <div style={{
         height: '500px',
+        display: 'flex',
+        flexDirection: 'column',
+        alignItems: 'center',
+        justifyContent: 'center',
         background: 'radial-gradient(circle at 30% 30%, rgba(22, 163, 74, 0.3) 0%, rgba(21, 128, 61, 0.2) 50%, rgba(20, 83, 45, 0.1) 100%), linear-gradient(135deg, #0a2e0a 0%, #1a4d1a 100%)',
-        borderRadius: '16px'
-      }}
-      camera={{ position: [0, 0, 10], fov: 45 }}
-      gl={{
-        antialias: true,
-        shadowMap: { enabled: true, type: THREE.PCFSoftShadowMap },
-        powerPreference: "high-performance",
-        alpha: false
-      }}
-      dpr={[1, 2]}
-      frameloop="demand"
-    >
-      <Suspense fallback={null}>
+        borderRadius: '16px',
+        color: 'white',
+        fontSize: '16px',
+        textAlign: 'center',
+        padding: '20px'
+      }}>
+        <div style={{ fontSize: '24px', marginBottom: '10px' }}>⚠️</div>
+        <div>3D Visualization Not Available</div>
+        <div style={{ fontSize: '14px', marginTop: '10px', opacity: 0.8 }}>
+          WebGL is required for 3D rendering. Please ensure your browser supports WebGL and try refreshing the page.
+        </div>
+      </div>
+    );
+  }
+
+  return (
+    <div style={{ position: 'relative' }}>
+      <Canvas
+        style={{
+          height: '500px',
+          background: 'radial-gradient(circle at 30% 30%, rgba(22, 163, 74, 0.3) 0%, rgba(21, 128, 61, 0.2) 50%, rgba(20, 83, 45, 0.1) 100%), linear-gradient(135deg, #0a2e0a 0%, #1a4d1a 100%)',
+          borderRadius: '16px'
+        }}
+        camera={{ position: [0, 0, 10], fov: 45 }}
+        gl={{
+          antialias: true,
+          shadowMap: { enabled: true, type: THREE.BasicShadowMap },
+          powerPreference: "default",
+          alpha: false,
+          failIfMajorPerformanceCaveat: false
+        }}
+        dpr={[1, 2]}
+        frameloop="always"
+        onError={(error) => {
+          console.warn('Three.js Canvas error:', error);
+          setHasError(true);
+        }}
+      >
+      <Suspense fallback={
+        <div style={{
+          height: '500px',
+          display: 'flex',
+          alignItems: 'center',
+          justifyContent: 'center',
+          background: 'radial-gradient(circle at 30% 30%, rgba(22, 163, 74, 0.3) 0%, rgba(21, 128, 61, 0.2) 50%, rgba(20, 83, 45, 0.1) 100%), linear-gradient(135deg, #0a2e0a 0%, #1a4d1a 100%)',
+          borderRadius: '16px',
+          color: 'white',
+          fontSize: '18px'
+        }}>
+          Loading 3D Molecule...
+        </div>
+      }>
         <ambientLight intensity={0.4} />
         <pointLight position={[10, 10, 10]} intensity={1.2} color="#22c55e" castShadow shadow-mapSize-width={1024} shadow-mapSize-height={1024} />
         <pointLight position={[-10, -10, -10]} intensity={0.8} color="#16a34a" castShadow shadow-mapSize-width={1024} shadow-mapSize-height={1024} />
@@ -383,6 +441,7 @@ const Molecule3D = ({ reaction, selectedAcid, selectedBase, productType, isReact
         />
       </Suspense>
     </Canvas>
+    </div>
   );
 };
 
