@@ -223,10 +223,7 @@ Output only valid JSON array of objects with these fields. No additional text.`;
               ))}
             </select>
           </div>
-<div className="simple-info">
-        <p><strong>What happens:</strong> Plants use sunlight to make food and oxygen from CO₂ and water.</p>
-        <p><strong>Real use:</strong> Produces all oxygen we breathe and food for life on Earth.</p>
-      </div>
+
           {selectedReaction === "acidBase" && (
             <>
               <div className="control-group">
@@ -256,37 +253,93 @@ Output only valid JSON array of objects with these fields. No additional text.`;
               </div>
             </>
           )}
- const handleSimulate = () => {
-    setIsSimulating(true);
-    setProgress(0);
-    setSimulationPhase("Initializing simulation...");
-    const interval = setInterval(() => {
-      setProgress(prev => {
-        const newProgress = prev + 2;
-        if (newProgress >= 100) {
-          setSimulationPhase("Reaction complete!");
-          clearInterval(interval);
-          setTimeout(() => {
-            setIsSimulating(false);
-            setSimulationPhase("");
-          }, 500);
-        }
-        return newProgress > 100 ? 100 : newProgress;
-      });
-    }, 300);
-  };
+
           
-         <div className="control-group">
-                <label className="control-label">Select Base</label>
-                <select
-                  value={selectedBase}
-                  onChange={(e) => setSelectedBase(e.target.value)}
-                  className="reactant-selector"
-                >
-                  {reactantOptions.bases.map(base => (
-                    <option key={base.name} value={base.name}>{base.formula} ({base.name})</option>
-                  ))}
-                </select>
+          <div className="control-group legend">
+            <h4>Legend</h4>
+            <div className="legend-row"><span className="legend-swatch" style={{background:'#e17055'}}></span> Oxygen / acid</div>
+            <div className="legend-row"><span className="legend-swatch" style={{background:'#00b894'}}></span> Base / Alkali</div>
+            <div className="legend-row"><span className="legend-swatch" style={{background:'#ffffff', border:'1px solid #ccc'}}></span> Hydrogen / H</div>
+            <div className="legend-row"><span className="legend-swatch" style={{background:'#ffeaa7'}}></span> Salt (product)</div>
+            <div className="legend-note">Tip: Hover atoms to highlight and view labels; click atoms for detailed info; charged ions glow red (positive) or green (negative).</div>
+          </div>
+
+          <div className="control-group">
+            <button
+              onClick={handleSimulate}
+              disabled={isSimulating}
+              className="simulate-button"
+            >
+              {isSimulating ? "Running..." : "Start Simulation"}
+            </button>
+          </div>
+
+          <div className="control-group">
+            <button
+              onClick={generateQuizQuestions}
+              className="quiz-button"
+              title="After you click on this button, please wait for a few seconds while quiz questions are loading."
+              disabled={isQuizLoading}
+            >
+              {isQuizLoading ? "Loading Quiz Questions..." : "Take Quiz"}
+            </button>
+          </div>
+
+          {isSimulating && (
+            <div className="progress-section">
+              <div className="progress-label">
+                <span>Progress</span>
+                <span>{progress}%</span>
               </div>
-            </>
+              <div className="progress-track">
+                <div
+                  className="progress-fill"
+                  style={{ width: `${progress}%` }}
+                ></div>
+              </div>
+              <div className="phase-text">{simulationPhase}</div>
+            </div>
           )}
+
+   
+        </aside>
+
+        
+        <main className="visualization-area">
+          <div className="reaction-info">
+            <h2>{reactionNames[selectedReaction]} Reaction</h2>
+            
+          </div>
+
+          <div className="canvas-container">
+            <SelectedComponent 
+              isSimulating={isSimulating} 
+              selectedAcid={selectedAcid} 
+              selectedBase={selectedBase} 
+              onAtomClick={handleAtomClick}
+            />
+          </div>
+        </main>
+      </div>
+      {atomInfo && (
+        <div className="atom-info-overlay">
+          <div className="atom-info-modal">
+            <button className="close-button" onClick={() => setAtomInfo(null)}>×</button>
+            <h3>{atomInfo.symbol} - {atomInfo.name}</h3>
+            <p><strong>Atomic Number:</strong> {atomInfo.atomicNumber}</p>
+            <p><strong>Valence:</strong> {atomInfo.valence}</p>
+            <p><strong>Role in Reaction:</strong> {atomInfo.role}</p>
+            <p><strong>Real-World Example:</strong> {atomInfo.example}</p>
+          </div>
+        </div>
+      )}
+      <QuizModal
+        isOpen={isQuizOpen}
+        onClose={() => setIsQuizOpen(false)}
+        questions={quizQuestions}
+        onComplete={handleQuizComplete}
+      />
+    </div>
+  );
+}
+
